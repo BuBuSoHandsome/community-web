@@ -13,9 +13,17 @@ import java.util.Date;
 public class TimeStampTest {
 
     public static void main(String[] args) {
-        Date date = new java.util.Date();
-        Timestamp createDate = new Timestamp(date.getTime());
-        System.out.println(createDate);
+
+
+        String aa = "UserMSG:53161198|e44e2429accc431fa347e48b6d1d5c73";
+        String ff[]  = aa.split("\\|");
+
+        for (int i=0;i<ff.length;i++){
+            System.out.println(ff[i]);
+
+        }
+
+
     }
 
 

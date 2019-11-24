@@ -1,4 +1,4 @@
-package com.example.demo.CommonTool;
+package com.example.demo.commonTool;
 import org.springframework.stereotype.Component;
 import java.sql.Timestamp;
 import java.util.Date;

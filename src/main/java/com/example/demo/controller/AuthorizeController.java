@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.CommonTool.TimeTool;
+import com.example.demo.commonTool.RedisUtil;
+import com.example.demo.commonTool.TimeTool;
 import com.example.demo.dto.AccessTokenDto;
 import com.example.demo.dto.GithubUser;
 import com.example.demo.mapper.UserMapper;
@@ -12,7 +13,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Controller
@@ -36,10 +40,13 @@ public class AuthorizeController {
     @Autowired
     private TimeTool timeTool;
 
+    @Autowired
+    private RedisUtil redisUtil;
+
     @GetMapping("/callback")
     public String callback(@RequestParam(name = "code") String code,
                            @RequestParam(name = "state") String state,
-                           HttpServletRequest request){
+                           HttpServletResponse response) {
         AccessTokenDto accessTokenDto = new AccessTokenDto();
         accessTokenDto.setClient_id(clientId);
         accessTokenDto.setClient_secret(clientSecret);
@@ -49,15 +56,27 @@ public class AuthorizeController {
         String accessToken = githubProvider.getAccessToken(accessTokenDto);
         GithubUser githubUser = githubProvider.getUser(accessToken);
 
-        if(null!=githubUser){
+        if (null != githubUser) {
             //不为空，登陆成功
-            request.getSession().setAttribute("user", githubUser);
-            System.out.println("登录成功，"+githubUser.getName()+" 欢迎回家");
-            User user = new User(githubUser.getName(),String.valueOf(githubUser.getId()),UUID.randomUUID().toString(),timeTool.getSystemTime(),timeTool.getSystemTime());
-            userMapper.insert(user);
+            System.out.println("登录成功，" + githubUser.getName() + " 欢迎回家");
+
+            //需要判断该用户是否新用户，是则插入user表，并且添加到redis缓存中管理，否则更新redis缓存的用户信息即可。
+            User existUser = userMapper.queryUserByAccountId(String.valueOf(githubUser.getId()));
+            if (null == existUser) {
+                User user = new User(githubUser.getName(), String.valueOf(githubUser.getId()), timeTool.getSystemTime(), timeTool.getSystemTime());
+                userMapper.insert(user);
+            }
+            //把登录状态的token放入redis 以及 cookie中
+            String loginToken = UUID.randomUUID().toString().replaceAll("-", "");
+            //以GitHub帐号信息和token存入Redis
+            Map<String,Object> userMap = new HashMap<>();
+            userMap.put("token", loginToken);
+            userMap.put("name",githubUser.getName());
+            redisUtil.hmset("UserMSG:"+githubUser.getId(),userMap);
+            response.addCookie(new Cookie("token", "UserMSG:"+githubUser.getId()+"|"+loginToken));
             //重定向回主页
             return "redirect:/";
-        }else{
+        } else {
             //登录失败
             return "redirect:/";
         }

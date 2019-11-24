@@ -6,14 +6,16 @@ public class User {
     private Integer id;
     private String name;
     private String account_id;
-    private String token;
     private Timestamp gmtCreate;
     private Timestamp gmtModified;
 
-    public User(String name, String account_id, String token, Timestamp gmtCreate, Timestamp gmtModified) {
+    //ps:如果一个类有了有参构造，必然也要无参构造，否则mybatis会报错。
+    public User() {
+    }
+
+    public User(String name, String account_id, Timestamp gmtCreate, Timestamp gmtModified) {
         this.name = name;
         this.account_id = account_id;
-        this.token = token;
         this.gmtCreate = gmtCreate;
         this.gmtModified = gmtModified;
     }
@@ -40,14 +42,6 @@ public class User {
 
     public void setAccount_id(String account_id) {
         this.account_id = account_id;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     public Timestamp getGmtCreate() {

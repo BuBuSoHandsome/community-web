@@ -1,6 +1,7 @@
 #community-web 咘咘社区
 
 
-第一次试用SpringBoot
+集成SpringBoot Springmvc mybatis redis zookeeper dubbo 等等分布式技术的开源练手项目
+
 
 [Git授权api](https://developer.github.com/apps/)
